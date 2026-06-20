@@ -88,6 +88,23 @@ function destroySession(token) {
   return existed;
 }
 
+function destroySessionsByOpenid(openid) {
+  const destroyed = [];
+  for (const [token, session] of sessions.entries()) {
+    if (session.openid === openid) {
+      destroyed.push({
+        token,
+        createdAt: session.createdAt,
+      });
+      sessions.delete(token);
+    }
+  }
+  if (destroyed.length > 0) {
+    saveSessions();
+  }
+  return destroyed;
+}
+
 function cleanupExpiredSessions() {
   const now = Date.now();
   let changed = false;
@@ -110,4 +127,5 @@ module.exports = {
   getSession,
   refreshSession,
   destroySession,
+  destroySessionsByOpenid,
 };

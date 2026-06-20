@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 
 const { code2Session } = require('./wechatService');
-const { createSession, refreshSession, destroySession } = require('./sessionStore');
+const { createSession, refreshSession, destroySession, destroySessionsByOpenid } = require('./sessionStore');
 const authMiddleware = require('./authMiddleware');
 
 const app = express();
@@ -53,6 +53,23 @@ app.post('/api/logout', authMiddleware, (req, res) => {
   res.json({
     code: 0,
     message: '已退出登录',
+  });
+});
+
+app.post('/api/session/kick-all', authMiddleware, (req, res) => {
+  const openid = req.session.openid;
+  const destroyed = destroySessionsByOpenid(openid);
+  res.json({
+    code: 0,
+    message: `已下线 ${destroyed.length} 个设备`,
+    data: {
+      openid,
+      kickedCount: destroyed.length,
+      kickedSessions: destroyed.map((s) => ({
+        tokenPrefix: s.token.substring(0, 8) + '...',
+        createdAt: s.createdAt,
+      })),
+    },
   });
 });
 
